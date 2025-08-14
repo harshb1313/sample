@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect specific routes
-  const protectedRoutes = ['/dashboard', '/profile', '/settings'];
+  const protectedRoutes = ['/dashboard', '/chat', '/settings'];
   const isProtectedRoute = protectedRoutes.some(route =>
     pathname.startsWith(route)
   );

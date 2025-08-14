@@ -1,36 +1,39 @@
+// app/page.tsx (Server Component)
+
 import { auth0 } from '../lib/auth0';
 import { redirect } from 'next/navigation';
-import TestTRPC from '@/components/TestTRPC';
 
 export default async function Home() {
   const session = await auth0.getSession();
-  // If user is already logged in, redirect to dashboard
+
+  // Redirect logged-in users to dashboard
   if (session && session.user) {
     redirect('/dashboard');
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Our App</h1>
-        {/* <TestTRPC /> */}
-        <p className="text-gray-600 mb-8">Please sign up or log in to continue</p>
-      </div>
+    <div className="container vh-100 d-flex flex-column justify-content-center align-items-center text-center">
+      <h1 className="display-4 mb-3">Welcome to Our App</h1>
+      <p className="text-secondary fs-5 mb-4">
+        Please sign up or log in to continue
+      </p>
 
-      <div className="space-x-4">
+      <div className="d-flex gap-3">
         <a
           href="/auth/login?screen_hint=signup"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
+          className="btn btn-primary btn-lg"
+          role="button"
         >
           Sign Up
         </a>
         <a
           href="/auth/login"
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
+          className="btn btn-success btn-lg"
+          role="button"
         >
           Log In
         </a>
       </div>
-    </main>
+    </div>
   );
 }
