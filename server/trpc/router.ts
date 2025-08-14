@@ -1,30 +1,62 @@
-import { router, publicProcedure, protectedProcedure } from './context';
-import { z } from 'zod';
+import { router, protectedProcedure } from "./context";
+import { z } from "zod";
 
 export const appRouter = router({
-  hello: publicProcedure
-    .input(z.object({ name: z.string().optional() }))
-    .query(({ input }) => ({ greeting: `Hello ${input.name ?? 'Vox'}! TRPC is working.` })),
-
-  getMessages: protectedProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const { data } = await ctx.supabase
-        .from('messages')
-        .select('*')
-        .eq('user_id', input.userId)
-        .order('created_at', { ascending: true });
-      return data;
-    }),
-
-  addMessage: protectedProcedure
-    .input(z.object({ userId: z.string(), content: z.string(), role: z.string() }))
+  askLLM: protectedProcedure
+    .input(z.object({ prompt: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const { data } = await ctx.supabase
-        .from('messages')
-        .insert([{ ...input }])
-        .select();
-      return data;
+      try {
+        // Call Gemini API with correct endpoint and format
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{
+                  text: input.prompt
+                }]
+              }],
+              generationConfig: {
+                maxOutputTokens: 256,
+                temperature: 0.7,
+              }
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`Gemini API error: ${res.status} ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        
+        // Extract generated text with proper error handling
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated";
+
+        // Save to Supabase
+        const { error } = await ctx.supabase.from("messages").insert([
+          {
+            user_id: ctx.user!.sub,
+            content: reply,
+            role: "assistant",
+            created_at: new Date().toISOString(),
+          },
+        ]);
+
+        if (error) {
+          console.error("Supabase error:", error);
+          throw new Error("Failed to save message to database");
+        }
+
+        return { reply };
+      } catch (error) {
+        console.error("askLLM error:", error);
+        throw new Error(`Failed to process request: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }),
 });
 

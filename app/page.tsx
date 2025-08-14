@@ -4,8 +4,6 @@ import TestTRPC from '@/components/TestTRPC';
 
 export default async function Home() {
   const session = await auth0.getSession();
-  console.log('Supabase URL:', process.env.SUPABASE_URL);
-  console.log('Supabase Key:', process.env.SUPABASE_SERVICE_ROLE_KEY);
   // If user is already logged in, redirect to dashboard
   if (session && session.user) {
     redirect('/dashboard');
@@ -15,7 +13,7 @@ export default async function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4">Welcome to Our App</h1>
-        <TestTRPC />
+        {/* <TestTRPC /> */}
         <p className="text-gray-600 mb-8">Please sign up or log in to continue</p>
       </div>
 

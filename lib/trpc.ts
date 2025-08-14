@@ -1,14 +1,14 @@
 import { createTRPCReact } from '@trpc/react-query';
-import { httpBatchLink } from '@trpc/client';
+import { httpBatchLink, createTRPCProxyClient } from '@trpc/client';
 import type { AppRouter } from '@/server/trpc/router';
 
 export const trpc = createTRPCReact<AppRouter>();
 
 export function getTRPCClient() {
-  return trpc.createClient({
+  return createTRPCProxyClient<AppRouter>({
     links: [
       httpBatchLink({
-        url: '/api/trpc', // your tRPC route
+        url: '/api/trpc',
       }),
     ],
   });
